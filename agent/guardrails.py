@@ -3,16 +3,6 @@ agent/guardrails.py  —  Task 2.3: Hallucination Mitigation & Output Validation
 
 Validates agent outputs before returning them to the user.
 
-Fixes applied
--------------
-1. BAD_PATTERNS now loaded from config.yaml (guardrails.bad_date_patterns) so
-   year ranges can be updated without touching code.
-2. validate() signature unchanged; _last_checks side-channel retained for
-   display helpers (non-thread-safe — acceptable for single-process CLI use).
-3. Two display modes via format_confidence_block():
-   - verbose=True  → full card for demo.py  (developer / reviewer)
-   - verbose=False → compact one-line bar for main.py  (chat user)
-
 Scoring rubric
 --------------
 Base                                    : 0.50
