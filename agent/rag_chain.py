@@ -4,13 +4,6 @@ agent/rag_chain.py  —  Task 2.1: LLM-Powered RAG Chain
 Semantic search over the OEM manual only.
 Returns a grounded answer where every factual claim cites the source chunk.
 
-Fixes applied
--------------
-1. LLM call wrapped with tenacity retry/backoff (RateLimitError, APIConnectionError).
-2. Missing OPENAI_API_KEY raises EnvironmentError with a helpful message
-   (was bare KeyError from os.environ["OPENAI_API_KEY"]).
-3. Returned dict now includes "source_scores" so rag_node in agent.py can
-   pass real scores to check_rag_results() instead of always seeing an empty list.
 """
 
 from __future__ import annotations
