@@ -1,0 +1,267 @@
+================================================================================
+HORIZON PLATFORM — OEM TECHNICAL REFERENCE EXCERPTS
+Confidential — For Authorised Operations Personnel Only
+Revision 4.2  |  January 2024
+================================================================================
+
+This document contains excerpted technical documentation from Original Equipment
+Manufacturer (OEM) manuals for turbine and solar inverter models. Excerpts are provided for reference by operations
+and AI systems. For full documentation, contact the respective OEM.
+
+--------------------------------------------------------------------------------
+SECTION 1: VESTAS V150-4.5 MW — OPERATIONS & FAULT REFERENCE
+Manufacturer: Vestas Wind Systems A/S
+Model: V150-4.5 (4,500 kW rated output)
+Rotor Diameter: 150 m  |  Hub Height: 105–166 m  |  Cut-in: 3 m/s  |  Cut-out: 25 m/s
+--------------------------------------------------------------------------------
+
+1.1  PERFORMANCE OVERVIEW
+
+The V150-4.5 is designed for low-to-medium wind speed sites (IEC Wind Class IIA–IIIA).
+At a reference wind speed of 8.5 m/s, rated output is typically achieved. The power
+curve achieves 50% rated output at approximately 6.8 m/s hub-height wind speed. Annual
+availability targets are 97% for turbines within the first 10 years of operation.
+
+Any sustained deviation of more than 15% below the expected power curve at a given
+wind speed — sustained over a rolling 7-day window — should trigger a performance
+investigation. Acceptable causes include icing, planned curtailment, or grid limitation.
+Unexplained deviations must be escalated to the operations centre.
+
+1.2  FAULT CODES — DRIVETRAIN SYSTEM
+
+FAULT CODE: E-1001
+Name: Gearbox Overheating
+Trigger: Gearbox oil temperature sensor reading exceeds 80°C, or coolant flow rate
+         drops below 4.2 L/min.
+Severity: HIGH — turbine will perform automatic shutdown if temperature reaches 90°C.
+Symptoms: Increased noise from nacelle, oil temperature trending upward over 2–4 hours,
+          possible reduction in output power as protection ramp-down activates.
+Recommended Corrective Actions:
+  1. Perform immediate remote inspection via SCADA. Check oil temperature trend.
+  2. If temperature below 85°C and stable: schedule on-site inspection within 48 hours.
+  3. If temperature above 85°C or rising: initiate controlled shutdown. Do not restart
+     until coolant system is inspected by a certified technician.
+  4. On-site: inspect coolant reservoir level, pump operation, and heat exchanger for
+     blockage. Replace gearbox oil filter (Part No. VW-OIL-F42) if last replacement
+     exceeds 4,000 operational hours.
+  5. After repair: perform 30-minute warm-up run at reduced load before returning to
+     full production.
+Estimated Repair Time: 4–8 hours (filter replacement) / 2–5 days (pump replacement).
+
+FAULT CODE: E-1002
+Name: Rotor Imbalance / Blade Pitch Deviation
+Trigger: Pitch angle deviation between any two blades exceeds 2.0°, measured over a
+         sustained 60-second window at wind speeds above 6 m/s.
+Severity: MEDIUM-HIGH — continued operation risks accelerated bearing wear and fatigue
+          loading on the main shaft.
+Symptoms: Increased tower shadow effect, abnormal vibration at 1P frequency,
+          asymmetric power output visible in SCADA 10-minute data.
+Recommended Corrective Actions:
+  1. Check pitch controller log for recent calibration events or actuator errors.
+  2. Verify pitch encoder readings against physical blade position (requires on-site visit).
+  3. Recalibrate pitch actuators using the Vestas Pitch Calibration Tool (PCT v3.1).
+  4. If blade damage is suspected (lightning strike, erosion), perform visual inspection.
+     Use drone inspection if hub height exceeds 100 m.
+  5. If deviation persists after calibration: replace pitch actuator (Part No. VW-ACT-P15).
+Estimated Repair Time: 6–10 hours (calibration) / 1–2 days (actuator replacement).
+
+FAULT CODE: E-4001
+Name: Yaw System Fault — Heading Error
+Trigger: Nacelle heading deviates from optimal wind direction by more than 10° sustained
+         over 5 minutes, with wind speeds above 5 m/s.
+Severity: MEDIUM — causes AEP loss typically between 2–8% depending on sustained misalignment.
+Symptoms: SCADA yaw error alarm, visible nacelle misalignment on webcam, power output
+          10–20% below expected at current wind speed.
+Recommended Corrective Actions:
+  1. Check yaw drive motor current; compare against baseline (nominal: 12–14 A at rated speed).
+  2. Inspect yaw gear teeth for wear or foreign objects.
+  3. Verify wind vane calibration — replace if last calibration >12 months.
+  4. If yaw motor fault code present: replace yaw motor (Part No. VW-YAW-M08).
+  5. Perform yaw calibration procedure after any hardware replacement.
+Estimated Repair Time: 3–6 hours (calibration) / 1 day (motor replacement).
+
+FAULT CODE: E-4002
+Name: Blade Pitch Actuator Slow Response — Emergency Feather
+Trigger: Pitch actuator response time exceeds 8 seconds for a commanded 5° pitch change
+         during a wind speed ramp event above 12 m/s.
+Severity: HIGH — automatic emergency feather (blades to 90°) is engaged. Turbine stops.
+Recommended Corrective Actions:
+  1. Do not attempt remote restart. On-site inspection required.
+  2. Check hydraulic pressure in pitch actuator circuit (nominal: 180–200 bar).
+  3. Inspect hydraulic hose connections and accumulator pre-charge pressure.
+  4. Replace hydraulic pump seal kit if internal leakage suspected (Part No. VW-HYD-S22).
+  5. After repair, perform pitch response test per procedure in Section 7.4 of the full manual.
+Estimated Repair Time: 8–16 hours.
+
+--------------------------------------------------------------------------------
+SECTION 2: SIEMENS GAMESA SG-6.6-170 — OPERATIONS & FAULT REFERENCE
+Manufacturer: Siemens Gamesa Renewable Energy
+Model: SG-6.6-170 (6,600 kW rated output)
+Rotor Diameter: 170 m  |  Hub Height: 115–165 m  |  Cut-in: 3 m/s  |  Cut-out: 25 m/s
+--------------------------------------------------------------------------------
+
+2.1  PERFORMANCE OVERVIEW
+
+The SG-6.6-170 is Siemens Gamesa's flagship onshore turbine optimised for medium-to-high
+wind speed sites (IEC Class IA–IIA). The integrated SG PowerMode system provides adaptive
+output control, allowing temporary overproduction up to 7.2 MW under favourable conditions.
+
+Expected capacity factor on a Class II site: 38–45%. Rolling 30-day availability below
+95% should trigger a technical review. Performance deviations exceeding 12% from the
+reference power curve at wind speeds between 8–14 m/s are classified as critical anomalies
+requiring investigation within 72 hours.
+
+2.2  FAULT CODES — ELECTRICAL AND CONTROL SYSTEM
+
+FAULT CODE: E-1003
+Name: Generator Bearing Vibration Elevated
+Trigger: Vibration sensor at generator drive-end bearing exceeds 8.0 mm/s RMS (velocity),
+         or 0.5 g peak acceleration for more than 60 continuous seconds.
+Severity: HIGH — prolonged operation risks bearing failure and secondary damage to generator windings.
+Symptoms: Audible noise increase in nacelle (high-pitched whine), SCADA vibration alarm,
+          possible slight increase in generator temperature.
+Recommended Corrective Actions:
+  1. Reduce turbine load to 60% rated output via SCADA curtailment to reduce bearing stress.
+  2. Monitor vibration trend over 4-hour window at reduced load.
+  3. If vibration decreases below 5.0 mm/s: schedule bearing inspection within 7 days.
+  4. If vibration remains above 6.0 mm/s at curtailed load: initiate controlled shutdown.
+  5. On-site: collect grease sample for laboratory analysis. Replace bearing if wear particles
+     detected (Part No. SG-BRG-GDE6). Estimated Repair Time: 1–3 days.
+
+FAULT CODE: E-2002
+Name: Power Curve Deviation
+Trigger: Turbine output is more than 15% below the reference power curve at the measured
+         hub-height wind speed, averaged over a 6-hour window.
+Severity: MEDIUM — indicates aerodynamic or mechanical performance degradation.
+Possible Root Causes:
+  a) Blade contamination (insects, leading edge erosion) — common in coastal locations.
+  b) Blade pitch offset — see E-1002.
+  c) Air density variation — check if site temperature and pressure have changed significantly.
+  d) Partial grid curtailment by TSO — verify in SCADA event log.
+Recommended Corrective Actions:
+  1. Confirm curtailment is not active in SCADA.
+  2. Check blade pitch angles at standstill vs commissioned values.
+  3. If blade erosion suspected: schedule drone or rope-access inspection.
+  4. Leading edge erosion repair typically recovers 3–6% AEP.
+
+--------------------------------------------------------------------------------
+SECTION 3: LONGI SOLAR HI-MO 6 — INVERTER & PLANT FAULT REFERENCE
+Manufacturer: LONGi Solar / SMA Solar Technology (inverter)
+Panel Model: Hi-MO 6 (mono-PERC, 580 Wp per panel)
+Inverter: SMA Sunny Central 4200 UP
+--------------------------------------------------------------------------------
+
+3.1  PERFORMANCE OVERVIEW
+
+The Hi-MO 6 panels are rated at STC (1000 W/m², 25°C cell temperature, AM1.5).
+In field conditions, actual output depends on irradiance, temperature coefficient
+(−0.29%/°C above 25°C), and soiling losses (typically 2–5% in semi-arid Spain).
+
+Performance Ratio (PR) is the primary KPI for solar plants. Expected PR: 79–84%.
+A PR below 75% sustained over 7 consecutive days signals a plant-level anomaly.
+PR is calculated as: PR = E_actual / (G_poa × P_stc) where G_poa is plane-of-array
+irradiance in kWh/m² and P_stc is the installed DC capacity.
+
+3.2  FAULT CODES — INVERTER AND STRING SYSTEM
+
+FAULT CODE: E-3001
+Name: Inverter Overtemperature
+Trigger: Inverter cabinet internal temperature exceeds the threshold defined as:
+         ambient temperature + 45°C delta T, sustained for more than 10 minutes.
+Severity: MEDIUM-HIGH — thermal protection will throttle output or trip unit.
+Recommended Corrective Actions:
+  1. Check inverter air filters — clean or replace if blocked (schedule: every 6 months).
+  2. Verify cooling fans are operational; replace failed fans within 24 hours.
+  3. If ambient temperature is exceptionally high (>40°C), temporary derating is normal.
+  4. If fault persists after filter cleaning: check IGBT module thermal interface material
+     (Part No. SMA-IGBT-4200). Replace if thermal resistance has increased.
+Estimated Repair Time: 2–4 hours (filter/fan) / 1 day (IGBT module).
+
+FAULT CODE: E-3002
+Name: String Underperformance
+Trigger: DC string current is more than 20% below expected given current irradiance,
+         averaged over a 30-minute window with irradiance above 400 W/m².
+Severity: MEDIUM — typically indicates partial shading, soiling, or panel/string fault.
+Recommended Corrective Actions:
+  1. Review I-V curve trace for affected string (requires on-site string tester).
+  2. Check for physical shading (new obstructions, vegetation growth).
+  3. Perform electroluminescence (EL) imaging to detect cracked or delaminated panels.
+  4. Clean affected string if soiling is confirmed as root cause.
+  5. Replace defective panels if EL imaging identifies cell failure (Part process: OEM RMA).
+
+FAULT CODE: E-3003
+Name: Grid Frequency Out of Tolerance — Automatic Disconnect
+Trigger: Grid frequency deviates beyond 47.5–51.5 Hz for more than 200 milliseconds.
+Severity: HIGH — inverter performs automatic safe disconnection per EN 50549-1.
+         This is a protective response, not a hardware failure.
+Recommended Corrective Actions:
+  1. Check national grid operator (REE in Spain) for system-wide frequency events.
+  2. If grid event confirmed: await grid normalisation; inverter will reconnect automatically.
+  3. If frequency was within tolerance but fault triggered: recalibrate frequency relay
+     (calibration procedure in SMA Sunny Central service manual, Section 12).
+  4. Log the event in Horizon for regulatory reporting purposes.
+
+FAULT CODE: E-5001
+Name: Transformer Oil Temperature Warning
+Trigger: MV transformer oil temperature exceeds 85°C (Warning) or 95°C (Alarm/Trip).
+Severity: MEDIUM (Warning) / HIGH (Alarm)
+Recommended Corrective Actions:
+  1. Verify transformer cooling fans are operating at correct speed.
+  2. Check transformer oil level via sight glass.
+  3. If oil temperature exceeds 90°C: reduce plant output to 70% via SCADA.
+  4. If 95°C is reached: the protection relay will trip the transformer. Do not reset
+     until temperature drops below 75°C and root cause is identified.
+  5. Contact transformer OEM if overheat occurs without clear environmental cause.
+
+FAULT CODE: E-5002
+Name: Main Circuit Breaker Trip — Overvoltage Protection
+Trigger: MV bus voltage exceeds 115% of nominal (typically >690 V on a 600 V bus)
+         for more than 500 milliseconds.
+Severity: HIGH — automatic protection trip. Plant is offline until manually reset.
+Recommended Corrective Actions:
+  1. Do not attempt remote reset until voltage on MV bus is confirmed normal.
+  2. Contact grid operator to check for upstream voltage events.
+  3. On-site: inspect surge arrestors and check for damage to MV cable insulation.
+  4. Reset breaker only with authorised personnel on-site.
+  5. Log event and report to grid operator per connection agreement obligations.
+
+--------------------------------------------------------------------------------
+SECTION 4: GENERAL OPERATIONS GUIDELINES
+--------------------------------------------------------------------------------
+
+4.1  MAINTENANCE SCHEDULING
+
+Scheduled maintenance intervals for wind turbines in the GreenPowerMonitor fleet:
+  - Semi-annual service (every 6 months): mandatory for all turbines under warranty.
+    Includes: gearbox oil sampling, blade visual inspection, torque check of structural
+    bolts, lubrication of yaw and pitch bearings, SCADA sensor calibration.
+  - Annual full service: includes all semi-annual tasks plus generator alignment check,
+    transformer oil sampling, safety system functional tests, and cable inspection.
+  - Post-fault inspection: required within 5 working days of any HIGH severity fault event.
+
+For solar plants:
+  - Bi-annual panel cleaning in arid environments (more frequent if dustfall >2 g/m²/month).
+  - Annual inverter maintenance: filter replacement, fan inspection, I-V curve sweep.
+  - Transformer oil sampling: annually for units above 2 MVA.
+
+4.2  DATA QUALITY AND SCADA GAPS
+
+SCADA communication interruptions (fault E-2001) must be logged. Data gaps exceeding
+4 hours should be flagged in reporting and excluded from availability calculations
+unless the underlying cause is a planned maintenance activity.
+
+Assets with more than 72 cumulative hours of SCADA data gaps per month are classified
+as 'monitored with data quality issues' and must be reviewed by the asset manager.
+
+4.3  ESCALATION MATRIX
+
+  Level 1 (Remote response, <1 hour): All MEDIUM faults. Operations centre handles
+          via SCADA or remote reset.
+  Level 2 (On-site within 48 hours): HIGH severity faults where the turbine is still
+          producing at reduced output, or MEDIUM faults recurring >3 times in 30 days.
+  Level 3 (Emergency on-site, <8 hours): HIGH severity faults causing full shutdown,
+          any safety system activation, or transformer/grid protection trips.
+
+================================================================================
+END OF DOCUMENT
+================================================================================

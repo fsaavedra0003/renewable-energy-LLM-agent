@@ -1,0 +1,51 @@
+asset_id,name,type,location,latitude,longitude,capacity_mw,manufacturer,model,install_date,status
+WT-001,Wind Turbine WT-001,wind_turbine,Northern Spain,43.5365,-3.5233,4.8,Vestas,V150-4.5,2018-04-05,operational
+WT-002,Wind Turbine WT-002,wind_turbine,Castile,41.3186,-4.6946,5.56,Vestas,V136-3.45,2017-01-03,operational
+WT-003,Wind Turbine WT-003,wind_turbine,Galicia,42.9893,-8.1906,6.2,Siemens Gamesa,SG-4.5-132,2020-04-15,operational
+WT-004,Wind Turbine WT-004,wind_turbine,Aragon,41.4153,-0.6365,5.56,Siemens Gamesa,SG-4.5-132,2019-05-05,operational
+WT-005,Wind Turbine WT-005,wind_turbine,Navarre,43.0071,-1.3703,5.0,Nordex,N163/6.X,2019-10-09,operational
+WT-006,Wind Turbine WT-006,wind_turbine,La Rioja,42.6855,-2.5384,6.2,Nordex,N163/6.X,2019-11-20,operational
+WT-007,Wind Turbine WT-007,wind_turbine,Northern Spain,43.0328,-4.099,4.5,Vestas,V150-4.5,2019-02-28,operational
+WT-008,Wind Turbine WT-008,wind_turbine,Castile,41.367,-4.2633,5.0,GE Renewable Energy,GE-3.6-137,2019-04-22,operational
+WT-009,Wind Turbine WT-009,wind_turbine,Galicia,42.5634,-8.6205,4.0,Enercon,E-126/4.0,2021-12-08,maintenance
+WT-010,Wind Turbine WT-010,wind_turbine,Aragon,41.2321,-1.0845,5.0,Enercon,E-138/3.5,2017-04-27,operational
+WT-011,Wind Turbine WT-011,wind_turbine,Navarre,42.5956,-1.1855,5.0,Siemens Gamesa,SG-4.5-132,2018-11-16,operational
+WT-012,Wind Turbine WT-012,wind_turbine,La Rioja,42.0627,-2.3154,4.5,GE Renewable Energy,GE-3.6-137,2022-09-18,operational
+WT-013,Wind Turbine WT-013,wind_turbine,Northern Spain,42.8909,-4.1529,4.5,Nordex,N149/4.0,2018-09-16,operational
+WT-014,Wind Turbine WT-014,wind_turbine,Castile,41.4816,-4.2039,5.56,Siemens Gamesa,SG-4.5-132,2021-02-13,operational
+WT-015,Wind Turbine WT-015,wind_turbine,Galicia,42.6668,-8.359,3.6,Enercon,E-138/3.5,2022-09-25,operational
+WT-016,Wind Turbine WT-016,wind_turbine,Aragon,41.4634,-0.8994,6.0,Nordex,N163/6.X,2017-12-24,operational
+WT-017,Wind Turbine WT-017,wind_turbine,Navarre,42.3989,-1.7261,4.8,Vestas,V136-3.45,2022-09-20,operational
+WT-018,Wind Turbine WT-018,wind_turbine,La Rioja,41.9119,-2.537,6.6,Enercon,E-138/3.5,2019-08-01,maintenance
+WT-019,Wind Turbine WT-019,wind_turbine,Northern Spain,42.8857,-3.714,3.45,GE Renewable Energy,GE-3.6-137,2018-10-03,operational
+WT-020,Wind Turbine WT-020,wind_turbine,Castile,41.2651,-4.6723,4.0,Enercon,E-138/3.5,2022-08-18,operational
+WT-021,Wind Turbine WT-021,wind_turbine,Galicia,43.3951,-8.3501,4.5,Siemens Gamesa,SG-4.5-132,2022-05-13,operational
+WT-022,Wind Turbine WT-022,wind_turbine,Aragon,41.5381,-0.8117,3.6,Enercon,E-160/5.56,2018-04-03,operational
+WT-023,Wind Turbine WT-023,wind_turbine,Navarre,42.4289,-1.1946,3.6,Siemens Gamesa,SG-6.6-170,2022-11-02,operational
+WT-024,Wind Turbine WT-024,wind_turbine,La Rioja,42.0142,-2.7677,4.5,Vestas,V136-3.45,2019-11-16,operational
+WT-025,Wind Turbine WT-025,wind_turbine,Northern Spain,43.2071,-4.1057,6.0,Enercon,E-126/4.0,2018-08-26,operational
+WT-026,Wind Turbine WT-026,wind_turbine,Castile,41.7734,-4.2158,5.56,GE Renewable Energy,GE-4.8-158,2020-12-02,operational
+WT-027,Wind Turbine WT-027,wind_turbine,Galicia,42.5902,-8.5514,5.0,Nordex,N131/3.6,2017-04-07,operational
+WT-028,Wind Turbine WT-028,wind_turbine,Aragon,42.0613,-0.8497,4.5,GE Renewable Energy,GE-4.8-158,2017-08-26,operational
+WT-029,Wind Turbine WT-029,wind_turbine,Navarre,42.6856,-1.8863,3.6,Enercon,E-138/3.5,2018-03-14,operational
+WT-030,Wind Turbine WT-030,wind_turbine,La Rioja,42.7265,-2.1149,5.56,Vestas,V150-4.5,2017-07-09,operational
+PV-001,Solar Plant PV-001,solar_plant,Southern Spain,37.2306,-6.1649,37.33,Jinko Solar,Cheetah HC,2019-04-10,operational
+PV-002,Solar Plant PV-002,solar_plant,Andalusia,36.7017,-4.1884,19.11,SunPower,Performance 6,2018-10-16,operational
+PV-003,Solar Plant PV-003,solar_plant,Murcia,38.0051,-1.6589,43.31,Jinko Solar,Tiger Neo N-type,2018-10-03,operational
+PV-004,Solar Plant PV-004,solar_plant,Extremadura,38.8515,-6.2498,31.05,Jinko Solar,Tiger Neo N-type,2018-10-03,operational
+PV-005,Solar Plant PV-005,solar_plant,Southern Spain,37.3375,-5.797,35.14,LONGi Solar,Hi-MO 6,2020-04-09,operational
+PV-006,Solar Plant PV-006,solar_plant,Andalusia,36.444,-4.5721,5.42,LONGi Solar,Hi-MO 6,2022-10-04,operational
+PV-007,Solar Plant PV-007,solar_plant,Murcia,37.8629,-1.4741,44.57,LONGi Solar,Hi-MO 6,2020-05-06,operational
+PV-008,Solar Plant PV-008,solar_plant,Extremadura,38.6622,-6.0731,35.05,Jinko Solar,Tiger Neo N-type,2022-05-22,operational
+PV-009,Solar Plant PV-009,solar_plant,Southern Spain,37.2264,-5.9943,29.9,SunPower,Performance 6,2020-05-20,operational
+PV-010,Solar Plant PV-010,solar_plant,Andalusia,36.6541,-4.534,26.98,LONGi Solar,Hi-MO X6,2018-02-21,operational
+PV-011,Solar Plant PV-011,solar_plant,Murcia,37.931,-1.5434,49.09,First Solar,Series 7,2019-12-15,operational
+PV-012,Solar Plant PV-012,solar_plant,Extremadura,38.8215,-6.2685,45.68,SunPower,Performance 6,2022-01-27,operational
+PV-013,Solar Plant PV-013,solar_plant,Southern Spain,37.5092,-5.7998,21.41,SunPower,Maxeon 6,2018-06-07,operational
+PV-014,Solar Plant PV-014,solar_plant,Andalusia,36.9188,-4.1143,48.82,Jinko Solar,Eagle G4,2023-03-08,operational
+PV-015,Solar Plant PV-015,solar_plant,Murcia,38.0019,-1.359,13.07,JA Solar,JAM72S30,2020-07-26,operational
+PV-016,Solar Plant PV-016,solar_plant,Extremadura,38.7197,-6.0489,9.86,First Solar,Series 7,2018-08-08,operational
+PV-017,Solar Plant PV-017,solar_plant,Southern Spain,37.2672,-6.1583,6.06,First Solar,Series 6 Plus,2019-07-11,operational
+PV-018,Solar Plant PV-018,solar_plant,Andalusia,36.9635,-4.6308,27.92,LONGi Solar,Hi-MO X6,2023-09-11,maintenance
+PV-019,Solar Plant PV-019,solar_plant,Murcia,37.9579,-1.5926,48.31,First Solar,Series 7,2020-01-04,operational
+PV-020,Solar Plant PV-020,solar_plant,Extremadura,38.714,-6.5734,49.29,JA Solar,JAM54S31,2018-07-19,operational

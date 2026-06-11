@@ -1,0 +1,13 @@
+.env
+.chroma_db/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store
+evaluation/results.json
+.env
+venv/
+__pycache__/
+*.pyc
+.DS_Store
