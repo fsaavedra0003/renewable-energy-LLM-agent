@@ -226,17 +226,21 @@ class Evaluator:
         # string to any() — Python iterates over the string's characters, so
         # this is always True on any non-empty answer.
         #
-        # Fix: iterate over the known degraded asset IDs and check whether
-        # at least one is mentioned in the answer.
+        # Fix: check each known degraded asset ID individually, and require
+        # ALL of them to be mentioned (not just one) — the brief specifies
+        # three deliberately-degraded assets, so a complete answer should
+        # surface all three.
         if case.get("checks_degradation"):
-            result.degradation_detected = any(
-                asset_id.lower() in answer.lower()
-                for asset_id in DEGRADED_ASSET_IDS
-            )
+            found_degraded = [
+                asset_id for asset_id in DEGRADED_ASSET_IDS
+                if asset_id.lower() in answer.lower()
+            ]
+            result.degradation_detected = len(found_degraded) == len(DEGRADED_ASSET_IDS)
             if not result.degradation_detected:
+                missing = sorted(set(DEGRADED_ASSET_IDS) - set(found_degraded))
                 notes.append(
-                    f"Degradation detection: none of {DEGRADED_ASSET_IDS} "
-                    f"found in answer"
+                    f"Degradation detection: missing {missing} from "
+                    f"{DEGRADED_ASSET_IDS} in answer"
                 )
 
         result.passed = (

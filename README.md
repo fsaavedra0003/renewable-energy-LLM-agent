@@ -54,6 +54,10 @@ guardrails_node      — validates citations → confidence score
 Explicit `AgentState` TypedDict, built-in conditional routing, inspectable graph
 at each node boundary. ReAct requires hand-rolling all of this.
 
+### Agent flow diagram
+
+![Agent flow from user question to answer](agent_flow.svg)
+
 ### Embedding model: `text-embedding-3-small`
 Best cost/quality ratio for retrieval. Outperforms `ada-002` on MTEB at ~5× lower cost.
 
@@ -153,8 +157,8 @@ comparison's failure mode and the corrected result.
 | 8 | `agent/tools/telemetry.py` | Removed duplicate `_asset_ids_from_*` helpers; imports from validators. Fixed `get_underperforming_assets()` to use cached registry instead of re-reading `assets.csv`. |
 | 9 | `agent/tools/maintenance.py` | Removed duplicate `_asset_ids_from_*` helpers; imports from validators. `_load()` uses pipeline cache. |
 | 10 | `ingestion/pipeline.py` | `_load_config()` removed; uses `agent.cache.get_config()`. Added warning for unparseable install_dates. Tightened fuzzy-match threshold (Levenshtein ≤ 1 within same asset class). |
-| 11 | `agent/tools/telemetry.py`, `evaluation/eval.py` | **Corrected hidden degradation pattern to 3 assets.** The single-signal (energy-ratio z-score) version found only 2 assets (PV-005, WT-006), with WT-006 a false positive. Added a second signal — absolute Jan-Feb-to-Mar-Jun availability drop — which cleanly isolates PV-004, PV-005, and PV-014 (all 6.1-6.96pp drops, all sharing the `E-3002` fault code), matching the brief's "three assets". Updated `DEGRADED_ASSET_IDS` accordingly. |
-| 11 | `retrieval/vectorstore.py` | `_load_config()` removed; uses `agent.cache.get_config()`. `_batch()` helper inlined. |
+| 11a | `agent/tools/telemetry.py`, `evaluation/eval.py` | **Corrected hidden degradation pattern to 3 assets.** The single-signal (energy-ratio z-score) version found only 2 assets (PV-005, WT-006), with WT-006 a false positive. Added a second signal — absolute Jan-Feb-to-Mar-Jun availability drop — which cleanly isolates PV-004, PV-005, and PV-014 (all 6.1-6.96pp drops, all sharing the `E-3002` fault code), matching the brief's "three assets". Updated `DEGRADED_ASSET_IDS` accordingly. |
+| 11b | `retrieval/vectorstore.py` | `_load_config()` removed; uses `agent.cache.get_config()`. `_batch()` helper inlined. |
 | 12 | `agent/guardrails.py` | `BAD_PATTERNS` loaded from `config.yaml` (configurable, not hardcoded). |
 | 13 | `agent/faithfulness.py` | Added note in semantic judge prompt about truncated source data. |
 | 14 | `evaluation/eval.py` | Fixed degradation detection bug (was always True on non-empty answer). |
