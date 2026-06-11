@@ -3,24 +3,6 @@ agent/agent.py  —  Task 2.2: Tool-Augmented LangGraph Agent
 
 LangGraph StateGraph with one node per tool.
 
-Fixes applied
--------------
-1. rag_node — fixed dead-code bug: was checking data.get("source_documents")
-   which never exists.  Now reads data.get("source_scores") — the list of
-   {"score": float} dicts added to run_rag()'s return value — so
-   check_rag_results() actually fires when retrieval quality is low.
-
-2. _infer_date_range_from_question removed — telemetry_node now calls
-   infer_date_range from agent.tools.validators (single shared copy, also
-   used by maintenance.py). The agent.py version was inconsistent with the
-   tool versions on "last month".
-
-3. router_node and synthesiser_node LLM calls wrapped with tenacity retry
-   (RateLimitError, APIConnectionError) so a single transient 429 does not
-   abort the entire demo run.
-
-4. ChatOpenAI instances promoted to module-level singletons (created once,
-   reused across calls) instead of being re-instantiated on every invocation.
 """
 
 from __future__ import annotations
@@ -245,7 +227,7 @@ def telemetry_node(state: AgentState) -> dict:
             and not re.search(r"\b(WT|PV)-\d+\b", q)
         )
 
-        # Use the single authoritative date-range function from validators
+        # single authoritative date-range function from validators
         date_start, date_end = infer_date_range(state["question"])
 
         date_err = check_date_range(date_start, date_end)
@@ -321,10 +303,6 @@ def rag_node(state: AgentState) -> dict:
     """
     Semantic search on OEM manual via ChromaDB.
 
-    Fix: run_rag() now returns 'source_scores' (list of {"score": float}).
-    We pass those to check_rag_results() so the threshold check actually fires.
-    Previously the code read 'source_documents' which never existed, making
-    check_rag_results() always skip silently.
     """
     from agent.rag_chain import run_rag
 
