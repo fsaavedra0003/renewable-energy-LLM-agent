@@ -104,18 +104,37 @@ output naturally *rises* into summer. This comparison cannot separate the
 deliberate anomaly from ordinary seasonality.
 
 **Fixed approach** (`get_underperforming_assets()` in `agent/tools/telemetry.py`):
-for each asset, compute its own seasonal ratio `Mar-Jun avg / Jan-Feb avg`,
-then z-score that ratio **within its asset class** (wind vs solar compared
-separately, since they move in opposite seasonal directions). Assets with
-`z <= -1.5` — a clear statistical outlier relative to same-class peers — are
-flagged.
+for each asset, compute two seasonality-normalised signals:
 
-This isolates **PV-005** (z=-2.47, ratio=1.59 vs solar peers averaging ~2.0+)
-and **WT-006** (z=-1.62, ratio=0.56 vs wind peers averaging ~0.65+), each
-corroborated by relevant fault codes in the telemetry (PV-005: `E-3002`
-string underperformance; WT-006: `E-2002` power curve deviation). Demo Q5
-exercises this. The EDA notebook (`notebooks/01_data_exploration.ipynb`)
-visualises both the naive comparison's failure mode and the fixed result.
+- **Energy ratio** = `Mar-Jun avg / Jan-Feb avg`, z-scored **within its asset
+  class** (wind vs solar compared separately, since they move in opposite
+  seasonal directions).
+- **Availability drop** = `Jan-Feb avg availability % - Mar-Jun avg
+  availability %` (an absolute, class-independent measure of sustained
+  underperformance).
+
+An asset is flagged if its energy-ratio z-score `<= -1.8` (a clear
+statistical outlier vs same-class peers) **OR** its absolute availability
+drop is `>= 4.0` percentage points (every other asset in either class sits
+at <= 2.5pp — ordinary seasonal noise).
+
+This isolates **PV-004** (z=-1.20, drop=6.14pp), **PV-005** (z=-2.47,
+drop=6.56pp), and **PV-014** (z=-1.19, drop=6.94pp) — three solar assets
+forming a tight, clearly separated cluster, all starting their decline in
+March 2024 and all carrying the corroborating `E-3002` fault code (string
+underperformance — DC current 20% below expected) in the Mar-Jun telemetry.
+This matches the brief's "three assets ... deliberate performance
+degradation trend starting in March 2024."
+
+An earlier single-signal version (energy-ratio z-score only, threshold
+`-1.5`) flagged only **PV-005** and **WT-006** — WT-006 turned out to be a
+false positive (its availability barely moves, 0.83pp), while PV-004 and
+PV-014 were missed because their energy-ratio shift alone (z ~ -1.2) didn't
+clear a single threshold, even though their availability drop is essentially
+identical to PV-005's. The dual-signal approach catches all three genuine
+outliers and excludes WT-006. Demo Q5 exercises this. The EDA notebook
+(`notebooks/01_data_exploration.ipynb`) visualises both the naive
+comparison's failure mode and the corrected result.
 
 ---
 
@@ -134,6 +153,7 @@ visualises both the naive comparison's failure mode and the fixed result.
 | 8 | `agent/tools/telemetry.py` | Removed duplicate `_asset_ids_from_*` helpers; imports from validators. Fixed `get_underperforming_assets()` to use cached registry instead of re-reading `assets.csv`. |
 | 9 | `agent/tools/maintenance.py` | Removed duplicate `_asset_ids_from_*` helpers; imports from validators. `_load()` uses pipeline cache. |
 | 10 | `ingestion/pipeline.py` | `_load_config()` removed; uses `agent.cache.get_config()`. Added warning for unparseable install_dates. Tightened fuzzy-match threshold (Levenshtein ≤ 1 within same asset class). |
+| 11 | `agent/tools/telemetry.py`, `evaluation/eval.py` | **Corrected hidden degradation pattern to 3 assets.** The single-signal (energy-ratio z-score) version found only 2 assets (PV-005, WT-006), with WT-006 a false positive. Added a second signal — absolute Jan-Feb-to-Mar-Jun availability drop — which cleanly isolates PV-004, PV-005, and PV-014 (all 6.1-6.96pp drops, all sharing the `E-3002` fault code), matching the brief's "three assets". Updated `DEGRADED_ASSET_IDS` accordingly. |
 | 11 | `retrieval/vectorstore.py` | `_load_config()` removed; uses `agent.cache.get_config()`. `_batch()` helper inlined. |
 | 12 | `agent/guardrails.py` | `BAD_PATTERNS` loaded from `config.yaml` (configurable, not hardcoded). |
 | 13 | `agent/faithfulness.py` | Added note in semantic judge prompt about truncated source data. |

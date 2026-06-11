@@ -19,14 +19,17 @@ from typing import Callable
 
 logger = logging.getLogger(__name__)
 
-# Assets flagged by the seasonality-normalised z-score method in
-# agent/tools/telemetry.get_underperforming_assets() (z <= -1.5 within their
-# asset class). These are the clearest statistical outliers in the synthetic
-# dataset — their Mar-Jun/Jan-Feb energy ratio diverges from same-class peers
-# by more than normal seasonal variation, and both carry corroborating fault
-# codes (PV-005: E-3002 string underperformance; WT-006: E-2002 power curve
-# deviation). Re-run get_underperforming_assets() if the dataset changes.
-DEGRADED_ASSET_IDS: list[str] = ["PV-005", "WT-006"]
+# Assets flagged by the seasonality-normalised dual-signal method in
+# agent/tools/telemetry.get_underperforming_assets() (energy-ratio z-score
+# <= -1.8 within asset class, OR absolute Jan-Feb-to-Mar-Jun availability
+# drop >= 4.0 percentage points). These three solar assets form a tight,
+# clearly separated cluster: each shows a 6.1-6.96pp availability drop
+# (vs <=2.5pp for every other asset in either class) and all three carry
+# the corroborating E-3002 fault code (string underperformance, DC current
+# 20% below expected) starting in March 2024 — matching the brief's "three
+# assets ... deliberate performance degradation trend starting in March
+# 2024". Re-run get_underperforming_assets() if the dataset changes.
+DEGRADED_ASSET_IDS: list[str] = ["PV-004", "PV-005", "PV-014"]
 
 GROUND_TRUTH: list[dict] = [
     {

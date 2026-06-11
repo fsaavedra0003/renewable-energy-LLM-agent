@@ -159,23 +159,31 @@ def get_underperforming_assets(
     """
     Detect assets with abnormal energy output degradation since March 2024.
 
-    Methodology (seasonality-normalised, within asset-class)
-    ----------------------------------------------------------
+    Methodology (seasonality-normalised, within asset-class, dual-signal)
+    ----------------------------------------------------------------------
     Wind output naturally declines and solar output naturally rises from
     winter (Jan-Feb) into summer (Mar-Jun) — a raw "% change" comparison
     therefore flags the entire wind fleet (or none of the solar fleet).
 
-    Instead, for each asset we compute its own seasonal ratio:
+    Instead, for each asset we compute two seasonal signals:
 
-        ratio = mean(Mar-Jun energy_kwh) / mean(Jan-Feb energy_kwh)
+        ratio      = mean(Mar-Jun energy_kwh) / mean(Jan-Feb energy_kwh)
+        avail_drop = mean(Jan-Feb availability_pct) - mean(Mar-Jun availability_pct)
 
-    This ratio captures each asset's *own* seasonal trend. We then compute
-    a z-score of this ratio *within its asset class* (wind turbines vs solar
-    plants compared separately, since they have opposite seasonal directions
-    and different baselines). Assets whose ratio is an outlier on the LOW
-    side relative to their peers (z <= z_threshold) have a Mar-Jun trend
-    that diverges from what the rest of the fleet experienced — i.e. a
-    genuine anomaly on top of (not explained by) normal seasonality.
+    Each signal captures the asset's *own* seasonal trend. We then compute
+    a z-score for the energy ratio *within its asset class* (wind turbines
+    vs solar plants compared separately, since they have opposite seasonal
+    directions and different baselines). An asset is flagged if EITHER:
+
+        - its energy ratio is a low-side outlier (z_ratio <= ratio_threshold), or
+        - its absolute availability drop exceeds avail_drop_floor percentage
+          points (a sustained, severe drop regardless of asset class)
+
+    A single energy-ratio-only signal under-detects: some degraded assets
+    show only a moderate energy-ratio shift but a sharp, sustained
+    availability drop (several pp, well beyond the ~0-2.5pp seasonal noise
+    seen across the rest of the fleet in either class), so both signals are
+    needed to catch the full set.
 
     comparison_month, if provided, restricts the reporting window for
     displayed averages to a single month (e.g. for "last month" queries),
@@ -223,28 +231,52 @@ def get_underperforming_assets(
     pre  = df[df["month_num"].isin([1, 2])].groupby("asset_id")["energy_kwh"].mean()
     post = df[df["month_num"].isin([3, 4, 5, 6])].groupby("asset_id")["energy_kwh"].mean()
 
-    seasonal = pd.concat([pre.rename("pre_avg"), post.rename("post_avg")], axis=1).dropna()
+    # ── per-asset availability drop: Jan-Feb avg - Mar-Jun avg (positive = drop) ─
+    pre_avail  = df[df["month_num"].isin([1, 2])].groupby("asset_id")["availability_pct"].mean()
+    post_avail = df[df["month_num"].isin([3, 4, 5, 6])].groupby("asset_id")["availability_pct"].mean()
+    avail_drop = (pre_avail - post_avail).rename("avail_drop")
+
+    seasonal = pd.concat(
+        [pre.rename("pre_avg"), post.rename("post_avg"), avail_drop], axis=1
+    ).dropna()
     seasonal["ratio"] = seasonal["post_avg"] / seasonal["pre_avg"]
 
     # asset_class for grouping (wind vs solar — opposite seasonal directions)
     asset_class = df.drop_duplicates("asset_id").set_index("asset_id")["type"]
     seasonal["asset_class"] = asset_class
 
-    z_threshold = -1.5  # isolates assets clearly separated from their class peers
+    ratio_threshold  = -1.8  # energy-ratio low-side outlier (within asset class)
+    avail_drop_floor = 4.0   # absolute availability drop (pp) — sustained, severe
     flagged_ids: list[str] = []
-    z_scores: dict[str, float] = {}
+    z_ratio_scores: dict[str, float] = {}
+    z_avail_scores: dict[str, float] = {}
 
     for cls, grp in seasonal.groupby("asset_class"):
-        if len(grp) < 3 or grp["ratio"].std() == 0 or pd.isna(grp["ratio"].std()):
+        if len(grp) < 3:
             continue
-        z = (grp["ratio"] - grp["ratio"].mean()) / grp["ratio"].std()
-        for aid, zval in z.items():
-            z_scores[aid] = round(float(zval), 2)
-            if zval <= z_threshold:
+        ratio_std = grp["ratio"].std()
+        avail_std = grp["avail_drop"].std()
+
+        z_ratio = (
+            (grp["ratio"] - grp["ratio"].mean()) / ratio_std
+            if ratio_std and not pd.isna(ratio_std)
+            else pd.Series(0.0, index=grp.index)
+        )
+        z_avail = (
+            (grp["avail_drop"] - grp["avail_drop"].mean()) / avail_std
+            if avail_std and not pd.isna(avail_std)
+            else pd.Series(0.0, index=grp.index)
+        )
+
+        for aid in grp.index:
+            zr, za = float(z_ratio[aid]), float(z_avail[aid])
+            z_ratio_scores[aid] = round(zr, 2)
+            z_avail_scores[aid] = round(za, 2)
+            if zr <= ratio_threshold or seasonal.loc[aid, "avail_drop"] >= avail_drop_floor:
                 flagged_ids.append(aid)
 
-    # sort flagged assets by severity (most negative z first)
-    flagged_ids.sort(key=lambda a: z_scores[a])
+    # sort flagged assets by severity: largest absolute availability drop first
+    flagged_ids.sort(key=lambda a: -seasonal.loc[a, "avail_drop"])
 
     # ── reporting window for displayed averages ───────────────────────────────
     df["month"] = df["date"].dt.to_period("M").astype(str)
@@ -276,10 +308,12 @@ def get_underperforming_assets(
         results.append({
             "asset_id":            asset_id,
             "asset_class":         row["asset_class"],
-            "z_score":             z_scores[asset_id],
+            "z_score_ratio":       z_ratio_scores[asset_id],
+            "z_score_avail_drop":  z_avail_scores[asset_id],
             "jan_feb_avg_kwh":     round(float(row["pre_avg"]), 0),
             "post_march_avg_kwh":  round(float(row["post_avg"]), 0),
             "seasonal_ratio":      round(float(row["ratio"]), 3),
+            "avail_drop_pct_pts":  round(float(row["avail_drop"]), 2),
             "reporting_window":    late_label,
             "reporting_avg_kwh":   round(float(reporting_avg), 0) if pd.notna(reporting_avg) else None,
             "recent_fault_codes":  fault_summary,
@@ -289,13 +323,17 @@ def get_underperforming_assets(
         "status":                "ok",
         "location_filter":       location,
         "method": (
-            "Seasonality-normalised z-score: each asset's (Mar-Jun avg / Jan-Feb avg) "
-            "ratio is compared against its own asset-class peers (wind vs solar "
-            f"compared separately). Assets with z <= {z_threshold} have a Mar-Jun "
-            "trend that diverges from the rest of their class beyond what normal "
-            "seasonal variation explains."
+            "Seasonality-normalised dual-signal detection: each asset's "
+            "(Mar-Jun avg / Jan-Feb avg) energy ratio is z-scored against its "
+            "own asset-class peers (wind vs solar compared separately). An "
+            f"asset is flagged if its energy-ratio z-score <= {ratio_threshold}, "
+            "OR if its absolute (Jan-Feb avg - Mar-Jun avg) availability drop "
+            f">= {avail_drop_floor} percentage points (a sustained, severe drop "
+            "far beyond the ~0-2.5pp seasonal noise seen across the rest of the "
+            "fleet in either class)."
         ),
-        "z_threshold":           z_threshold,
+        "ratio_threshold":       ratio_threshold,
+        "avail_drop_floor_pct_pts": avail_drop_floor,
         "underperforming_count": len(results),
         "underperforming_assets": results,
     }
