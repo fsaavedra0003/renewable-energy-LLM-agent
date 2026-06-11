@@ -1,11 +1,5 @@
 """
 agent/prompts.py — All LLM system prompts in one place
-
-Previously scattered across rag_chain.py, agent.py, and faithfulness.py.
-Centralising here makes the prompt-engineering surface auditable in a
-single file — useful for the prompt audit (Task 2.1/2.2 review) and for
-anyone tuning prompts without hunting through logic modules.
-
 Each prompt is a plain string constant. No behavioural change — only
 relocation and import-site updates.
 """
