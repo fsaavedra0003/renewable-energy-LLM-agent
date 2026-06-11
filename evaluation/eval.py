@@ -5,25 +5,6 @@ Ground-truth test cases derived from the actual dataset.
 Metrics: tool routing accuracy, keyword recall, numeric recall,
          error handling, degradation detection, confidence distribution.
 
-Fixes applied
--------------
-1. Degradation detection fix — original code:
-       result.degradation_detected = any(re.search(r"\b(WT|PV)-\d+\b", answer))
-   This passes a single string to any(), which iterates over its characters —
-   it is always True on a non-empty answer regardless of content.
-   Fixed to iterate over the known degraded asset IDs and check the answer
-   for each one explicitly.
-
-2. DEGRADED_ASSET_IDS constant added — the three assets with the deliberate
-   degradation trend starting March 2024 are named here so the check is
-   data-driven, not a regex on any asset ID pattern.
-
-3. Numeric recall metric — three ground-truth cases now populate
-   expected_numbers so the metric produces a real signal.  Values are derived
-   directly from the synthetic dataset and should remain stable.
-
-4. Numeric tolerance tightened to 1.5% (was 1%) to match faithfulness.py's
-   NUMERIC_TOLERANCE constant.
 """
 
 from __future__ import annotations
