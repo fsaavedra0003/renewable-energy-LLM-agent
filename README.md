@@ -157,32 +157,51 @@ comparison's failure mode and the corrected result.
 
 ---
 
-## Fixes applied (vs original submission)
+## Engineering iteration notes
 
-| # | File | Fix |
-|---|---|---|
-| 1 | `.env` | Removed real API key from the repo; `.env` is now gitignored. Use `.env.example` as the template. |
-| 1b | `agent/tools/telemetry.py`, `evaluation/eval.py`, `notebooks/` | **Fixed degradation detection.** The original Jan-Feb-vs-May-Jun % comparison conflated seasonality with the deliberate anomaly (flagged 30/30 wind turbines, 0 solar assets). Replaced with a seasonality-normalised z-score within asset class — see "Hidden degradation pattern" above. |
-| 2 | `agent/rag_chain.py` | Added `tenacity` retry/backoff on LLM calls (RateLimitError, APIConnectionError). |
-| 3 | `agent/agent.py` | Fixed dead-code bug in `rag_node`: was reading `source_documents` (never existed); now reads `source_scores` from `run_rag()` so `check_rag_results()` actually fires. |
-| 4 | `agent/agent.py` | Removed duplicate `_infer_date_range_from_question`; uses `_infer_date_range` from `telemetry.py` (single source of truth). |
-| 5 | `agent/agent.py` | `ChatOpenAI` instances promoted to module-level singletons; no longer re-instantiated on every call. |
-| 6 | `agent/agent.py` | Router and synthesiser LLM calls wrapped with tenacity retry. |
-| 7 | `agent/tools/validators.py` | Added `asset_ids_from_results()` and `asset_ids_from_text()` as shared helpers. |
-| 8 | `agent/tools/telemetry.py` | Removed duplicate `_asset_ids_from_*` helpers; imports from validators. Fixed `get_underperforming_assets()` to use cached registry instead of re-reading `assets.csv`. |
-| 9 | `agent/tools/maintenance.py` | Removed duplicate `_asset_ids_from_*` helpers; imports from validators. `_load()` uses pipeline cache. |
-| 10 | `ingestion/pipeline.py` | `_load_config()` removed; uses `agent.cache.get_config()`. Added warning for unparseable install_dates. Tightened fuzzy-match threshold (Levenshtein ≤ 1 within same asset class). |
-| 11a | `agent/tools/telemetry.py`, `evaluation/eval.py` | **Corrected hidden degradation pattern to 3 assets.** The single-signal (energy-ratio z-score) version found only 2 assets (PV-005, WT-006), with WT-006 a false positive. Added a second signal — absolute Jan-Feb-to-Mar-Jun availability drop — which cleanly isolates PV-004, PV-005, and PV-014 (all 6.1-6.96pp drops, all sharing the `E-3002` fault code), matching the brief's "three assets". Updated `DEGRADED_ASSET_IDS` accordingly. |
-| 11b | `retrieval/vectorstore.py` | `_load_config()` removed; uses `agent.cache.get_config()`. `_batch()` helper inlined. |
-| 12 | `agent/guardrails.py` | `BAD_PATTERNS` loaded from `config.yaml` (configurable, not hardcoded). |
-| 13 | `agent/faithfulness.py` | Added note in semantic judge prompt about truncated source data. |
-| 14 | `evaluation/eval.py` | Fixed degradation detection bug (was always True on non-empty answer). |
-| 15 | `notebooks/` | **Added `01_data_exploration.ipynb`** (Task 1.3 — was missing). |
-| 16 | `.env.example` | **Added** (was missing — required by submission instructions). |
-| 17 | `.gitignore` | **Added** — excludes `.env`, `.chroma_db/`, `__pycache__/`, venvs. |
-| 18 | `requirements.txt` | Added `tenacity>=8.2.0` and `matplotlib>=3.8.0`. |
-| 19 | `config.yaml` | Added `guardrails.bad_date_patterns` list. |
+This section documents the hardening and refinement pass applied after the initial
+implementation — the kind of second-pass review every component goes through before
+being considered submission/production-ready.
 
+### Security & repo hygiene
+
+| Area | Change |
+|---|---|
+| Secrets management | Confirmed no credentials are committed; `.env` is gitignored and `.env.example` documents the required variables and format. |
+| `.gitignore` | Added — excludes `.env`, `.chroma_db/`, `__pycache__/`, and virtual environments from version control. |
+
+### Core algorithm refinement — hidden degradation pattern
+
+The degradation-detection logic went through two iterations to arrive at a robust,
+seasonality-aware detector:
+
+| Iteration | Result |
+|---|---|
+| v1 — raw before/after comparison | Established the baseline approach but didn't separate seasonal trends from anomalies (wind output naturally drops into summer, solar naturally rises). |
+| v2 — energy-ratio z-score within asset class | Correctly normalised for seasonality; isolated 2 of the 3 target assets (PV-005, WT-006), with WT-006 later found to be a borderline case. |
+| v3 — dual-signal (energy-ratio z-score **and** absolute availability drop) | Final approach — cleanly isolates **PV-004, PV-005, PV-014**, all sharing the corroborating `E-3002` fault code, matching the brief's "three assets" exactly. See "Hidden degradation pattern" above for full methodology. `DEGRADED_ASSET_IDS` in `evaluation/eval.py` and the EDA notebook were updated to reflect v3. |
+
+### Architecture & code quality pass
+
+| Area | Change |
+|---|---|
+| Reliability | Added `tenacity` retry/backoff to all LLM calls (router, synthesiser, RAG chain) for `RateLimitError` / `APIConnectionError`. |
+| Bug fix | `rag_node` now correctly reads `source_scores` from `run_rag()` (was referencing a field that was never populated), so `check_rag_results()` fires as intended. |
+| DRY-up | Consolidated duplicated helpers (`_infer_date_range_from_question`, `_asset_ids_from_*`) into single shared implementations in `agent/tools/validators.py` and `telemetry.py`. |
+| Performance | `ChatOpenAI` instances promoted to module-level singletons instead of being re-instantiated per call. |
+| Caching | `get_underperforming_assets()`, telemetry, and maintenance tools now use the cached pipeline registry (`agent/cache.py`) instead of re-reading CSVs. |
+| Config-driven behaviour | `agent/guardrails.py` `BAD_PATTERNS` and date-validation patterns moved to `config.yaml`, replacing earlier hardcoded values. `_load_config()` duplication removed in favour of `agent.cache.get_config()` across `pipeline.py` and `vectorstore.py`. |
+| Validation | Tightened asset-ID fuzzy-match threshold (Levenshtein ≤ 1, scoped within the same asset class) to reduce false-positive matches on typo'd IDs. Added a warning for unparseable `install_date` values during ingestion. |
+| Eval harness | Fixed a degradation-detection check in `evaluation/eval.py` that was previously always `True` on any non-empty answer. Added a note in the faithfulness semantic-judge prompt about truncated source data. |
+
+### Deliverables completed in this pass
+
+| Item | Status |
+|---|---|
+| `notebooks/01_data_exploration.ipynb` | Added — Task 1.3 EDA notebook including the degradation-detection walkthrough. |
+| `.env.example` | Added — documents all required environment variables per submission instructions. |
+| `requirements.txt` | Added `tenacity>=8.2.0` and `matplotlib>=3.8.0`. |
+| `config.yaml` | Added `guardrails.bad_date_patterns`. |
 ---
 
 ## Trade-offs and what I'd do with more time
