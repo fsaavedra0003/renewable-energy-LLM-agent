@@ -180,7 +180,7 @@ seasonality-aware detector:
 | v2 — energy-ratio z-score within asset class | Correctly normalised for seasonality; isolated 2 of the 3 target assets (PV-005, WT-006), with WT-006 later found to be a borderline case. |
 | v3 — dual-signal (energy-ratio z-score **and** absolute availability drop) | Final approach — cleanly isolates **PV-004, PV-005, PV-014**, all sharing the corroborating `E-3002` fault code, matching the brief's "three assets" exactly. See "Hidden degradation pattern" above for full methodology. `DEGRADED_ASSET_IDS` in `evaluation/eval.py` and the EDA notebook were updated to reflect v3. |
 
-### Architecture & code quality pass
+### Architecture & code quality
 
 | Area | Change |
 |---|---|
@@ -193,7 +193,7 @@ seasonality-aware detector:
 | Validation | Tightened asset-ID fuzzy-match threshold (Levenshtein ≤ 1, scoped within the same asset class) to reduce false-positive matches on typo'd IDs. Added a warning for unparseable `install_date` values during ingestion. |
 | Eval harness | Fixed a degradation-detection check in `evaluation/eval.py` that was previously always `True` on any non-empty answer. Added a note in the faithfulness semantic-judge prompt about truncated source data. |
 
-### Deliverables completed in this pass
+### Final additions
 
 | Item | Status |
 |---|---|
