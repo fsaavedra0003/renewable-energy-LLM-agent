@@ -58,8 +58,7 @@ at each node boundary. ReAct requires hand-rolling all of this.
 
 ![Agent flow from user question to answer](agent_flow.svg)
 
-### Embedding model: `text-embedding-3-small`
-Best cost/quality ratio for retrieval. Outperforms `ada-002` on MTEB at ~5× lower cost.
+---
 
 ### Vector store: ChromaDB
 Zero-infra, local persistence, native metadata filtering (fault_code, manufacturer, model).
@@ -217,6 +216,17 @@ seasonality-aware detector:
   with a larger ground-truth set.
 - **Date inference**: `_infer_date_range()` uses keyword matching. A production system
   would parse dates properly with `dateparser` or a dedicated extraction step.
+- **Numeric faithfulness threshold**: `check_numeric()` in `agent/faithfulness.py`
+  ignores numbers below 10 (`_SKIP_IF_SMALL`) to avoid false positives on incidental
+  values like `[Source N]` indices and small list counts. The trade-off is that
+  small-magnitude domain values — z-scores (e.g. `-2.47`), seasonal ratios
+  (e.g. `1.79`), and availability-drop percentage points (e.g. `6.56`) — fall
+  below this threshold and aren't checked by Check C. A fabricated z-score would
+  only be caught by Check D (semantic judge), and only if it's triggered (score
+  < 0.6). With more time I'd replace the magnitude-based skip with a
+  context-aware one (e.g. only skip integers that immediately follow "Source" or
+  sit inside a count field), so these domain-critical values are covered by the
+  cheap regex check too.
 - **Thread safety**: `validate._last_checks` is a function attribute (not thread-safe).
   For a multi-user web server, move this to a per-request context variable.
 
