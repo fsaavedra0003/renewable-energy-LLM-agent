@@ -67,6 +67,21 @@ Runs with `pip install`, no external services.
 
 ---
 
+## Model choices
+
+| Component | Model | Why |
+|---|---|---|
+| Embeddings | `text-embedding-3-small` | Best cost/quality ratio for retrieval on a small corpus (17 chunks); ~5× cheaper than `ada-002` with better MTEB scores. `-large` would be overkill at this scale and adds latency without a measurable retrieval-quality gain on ~2,100 words of source text. |
+| Router / Synthesiser / Guardrail judge | `gpt-4o-mini` | Strong structured-output and tool-routing performance at low latency and cost, which matters here since most questions trigger 2-4 sequential LLM calls (router → tool(s) → synthesiser → optional semantic judge). `gpt-4o` was evaluated but the quality gain on this task (mostly extraction, aggregation, and templated summarisation) didn't justify ~3× cost and latency. |
+| Temperature | `0.0` (config-driven, `config.yaml`) | Factual, cited Q&A over operational data — determinism and reproducibility matter more than creative variation. |
+
+If this moved to production with a larger document corpus (full manuals, historical
+incident reports, SCADA alarm logs), I'd re-evaluate `text-embedding-3-large` and a
+larger synthesiser model, and benchmark both against the golden dataset below before
+switching.
+
+---
+
 ## Project structure
 
 ```
@@ -185,3 +200,46 @@ comparison's failure mode and the corrected result.
   would parse dates properly with `dateparser` or a dedicated extraction step.
 - **Thread safety**: `validate._last_checks` is a function attribute (not thread-safe).
   For a multi-user web server, move this to a per-request context variable.
+
+---
+
+## Production roadmap
+
+The items below are out of scope for this prototype but are the natural next steps
+to take this from a working prototype to a production system.
+
+- **Tool-calling API for ML and SQL workloads** — expose `telemetry_tool` and
+  `maintenance_tool` as callable endpoints over a real SQL warehouse (e.g.
+  Postgres/BigQuery) instead of in-memory pandas on CSVs, and add a dedicated
+  ML-scoring tool (e.g. an anomaly-detection or RUL model served behind its own
+  endpoint) that the agent can call alongside the existing tools — turning
+  `get_underperforming_assets()` from a heuristic into a model-backed prediction.
+- **Evals and observability with LangSmith** — trace every router decision, tool
+  call, and synthesiser/guardrail step; track latency, cost, and confidence-score
+  distributions over time; replace the standalone `evaluation/eval.py` script with
+  LangSmith-hosted eval runs on every PR so regressions in tool routing or citation
+  quality are caught automatically.
+- **Vector store at scale** — ChromaDB is the right choice for 17 chunks. At
+  production scale (full OEM manuals across all manufacturers, historical incident
+  reports, SCADA alarm logs — likely 10k-100k+ chunks), migrate to **Milvus** (or a
+  managed equivalent) for horizontal scaling, approximate-nearest-neighbour indexes
+  tuned for recall/latency trade-offs, and multi-tenant collection isolation per
+  site/region.
+- **External weather API integration** — connect a weather-forecast API (wind speed,
+  irradiance forecasts) as an additional tool, so the agent can contextualise
+  performance ("WT-006's output dropped, but wind speed was also 30% below forecast
+  that week — is this the fault or the weather?") and proactively flag when a
+  predicted underperformance is *expected* vs *anomalous*.
+- **Domain fine-tuning** — fine-tune a smaller open model on this fleet's historical
+  Q&A pairs, fault-code resolutions, and maintenance write-ups to better ground
+  responses in Horizon-specific terminology and reduce reliance on in-context
+  retrieval for routine questions, while keeping RAG for long-tail / rarely-asked
+  manual lookups.
+- **Golden dataset for evaluation** — replace the 8 hand-written ground-truth cases
+  in `evaluation/eval.py` with a curated golden set (50-100+ Q&A pairs spanning all
+  tool combinations, edge cases, and the degradation-detection scenario), reviewed
+  by domain experts (ops engineers), and used as the primary regression gate before
+  any prompt, model, or routing change ships.
+- **Front-end** — replace the CLI with a web UI (chat interface + dashboards for
+  fleet status, the flagged degradation assets, and confidence/citation drill-down),
+  likely as a thin layer over the existing LangGraph agent via a FastAPI backend.
